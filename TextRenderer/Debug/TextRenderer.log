@@ -1,5 +1,0 @@
-﻿  Shader.cpp
-  main.cpp
-C:\Users\int.thuong.nv\Desktop\DesertFox\TextRenderer\TextRenderer\main.cpp(223,22): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-  Generating Code...
-  TextRenderer.vcxproj -> C:\Users\int.thuong.nv\Desktop\DesertFox\TextRenderer\Debug\TextRenderer.exe
