@@ -1,0 +1,8 @@
+# Folder not update 
+
+.vs/*
+Debug/*
+x64/*
+WindowManager/Debug/*
+WindowManager/x64/*
+

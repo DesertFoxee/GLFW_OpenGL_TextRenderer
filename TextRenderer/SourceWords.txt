@@ -1,0 +1,7 @@
+﻿versus : Chống lại 
+stuff	 : hỗn hợp
+clamp : kẹp
+wrap : bộc lại
+
+mipmap 
+and anisotropic 
