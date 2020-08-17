@@ -3,6 +3,6 @@
 .vs/*
 Debug/*
 x64/*
-WindowManager/Debug/*
-WindowManager/x64/*
+TextRenderer/Debug/*
+TextRenderer/x64/*
 
