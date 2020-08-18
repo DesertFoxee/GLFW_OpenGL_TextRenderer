@@ -6,6 +6,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "config.h"
+#include "Window.h"
 
 #include <iostream>
 #include <fstream>
@@ -29,14 +30,6 @@ typedef	unsigned int Axis;
 using namespace std;
 
 
-class WindowSetting
-{
-public:
-	unsigned int antialiaLevel = 0;
-	CursorState cursor = CUR_NOMAL;
-	bool displayErrors = false;
-};
-
 
 
 
@@ -50,31 +43,31 @@ private:
 
 public:
 
-	/* ======================= <Window> ==================== */
+	///* ======================= <Window> ==================== */
 
-	static GLFWwindow* createWindow(const char* title, unsigned int width, unsigned int height, WindowSetting setting)
-	{
-		if (glfwInit() == GLFW_FALSE) return NULL;
+	//static GLFWwindow* createWindow(const char* title, unsigned int width, unsigned int height, WindowSetting setting)
+	//{
+	//	if (glfwInit() == GLFW_FALSE) return NULL;
 
-		if (setting.displayErrors)
-		{
-			glfwSetErrorCallback(showErrorCallBack);
-		}
+	//	if (setting.displayErrors)
+	//	{
+	//		glfwSetErrorCallback(showErrorCallBack);
+	//	}
 
-		if (setting.antialiaLevel > 0)
-		{
-			glfwWindowHint(GLFW_SAMPLES, 8);
-			glEnable(GL_MULTISAMPLE);
-		}
-		GLFWwindow* window = glfwCreateWindow(width, height, title, NULL, NULL);
+	//	if (setting.antialiaLevel > 0)
+	//	{
+	//		glfwWindowHint(GLFW_SAMPLES, 8);
+	//		glEnable(GL_MULTISAMPLE);
+	//	}
+	//	GLFWwindow* window = glfwCreateWindow(width, height, title, NULL, NULL);
 
-		if (setting.cursor == CUR_HIDDEN)
-		{
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-		}
+	//	if (setting.cursor == CUR_HIDDEN)
+	//	{
+	//		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+	//	}
 
-		return window;
-	}
+	//	return window;
+	//}
 	static GLFWwindow* createWindow(const char* title, unsigned int width, unsigned int height)
 	{
 		if (glfwInit() == GLFW_FALSE) return NULL;
@@ -124,14 +117,13 @@ public:
 	}
 
 	// build perspective matrix window
-	static glm::mat4 getMatrixProj(GLFWwindow* window, float degree, float near, float far)
+	static glm::mat4 getMatrixProj(Window* window, float degree, float _near, float _far)
 	{
-		int width, height;
-		glfwGetWindowSize(window, &width, &height);
+		unsigned int width = window->getWidth();
+		unsigned int height = window->getHeight();
 		float aspect_ratio = float(width) / float(height);
 
-		glm::mat4 proj_mat = glm::perspective(cvDegreeToRadius(degree), aspect_ratio, near, far);
-		//glm::mat4 proj_mat = glm::frustum(-10.f, 10.f, 10.f, -10.0f, 0.1f, 100.f);
+		glm::mat4 proj_mat = glm::perspective(cvDegreeToRadius(degree), aspect_ratio, _near, _far);
 		return proj_mat;
 	}
 	/* ======================= <Vector3D> ==================== */

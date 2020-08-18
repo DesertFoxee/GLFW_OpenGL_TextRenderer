@@ -137,7 +137,7 @@ public:
         if (logsLength > 0)
         {
             GLchar* logs = new GLchar[logsLength];
-            glGetShaderInfoLog(shaderProID, logsLength, &logsLength, logs);
+            glGetProgramInfoLog(shaderProID, logsLength, &logsLength, logs);
             strLog = std::string(logs);
             delete[] logs;
         }
@@ -240,8 +240,7 @@ public:
 
         m_program = glCreateProgram();
         glAttachShader(m_program, m_vertexShader);
-        if (geomSrc) 
-            (m_program, m_geomShader);
+        if (geomSrc)  (m_program, m_geomShader);
         glAttachShader(m_program, m_fragmentShader);
 
         glLinkProgram(m_program);
