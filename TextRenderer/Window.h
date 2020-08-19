@@ -12,6 +12,7 @@
 #include <iostream>
 #include <vector>
 #include "Config.h"
+#include "Keyboard.h"
 
 
 
@@ -89,12 +90,16 @@ private:
     GLFWwindow* m_pWindow;
 
 private:
-    void (*DrawFunc)       (Window*) = NULL;
+    void (*DrawFunc)       (Window* ,float deltime) = NULL;
     void (*KeyboardFunc)   (Window*, int key, int scancode, int action, int mods);
     void (*MouseFunc)      (Window*, int button, int action, int mods);
     void (*ScrollFunc)     (Window*, double xoffset, double yoffset);
     void (*ResizeFunc)     (Window*, int widht, int height);
     void (*CurrsorPosFunc) (Window*, double xpos, double ypos);
+
+
+private:
+    MKeyboard* keyboard =NULL;
 
 private:
 
@@ -120,13 +125,15 @@ private:
     static void DrawDef(GLFWwindow* window)
     {
         Window* winProcess = (Window*)glfwGetWindowUserPointer(window);
-        winProcess->DrawFunc(winProcess);
+        winProcess->DrawFunc(winProcess , 0.0f);
     }
     static void KeyboardFuncDef(GLFWwindow* window, int key, int scancode, int action, int mods)
     {
         Window* winProcess = (Window*)glfwGetWindowUserPointer(window);
+        //winProcess->getKeyboard()->EnableKeyInput();
         winProcess->KeyboardFunc(winProcess, key, scancode, action, mods);
     }
+
     static void MouseFuncDef(GLFWwindow* window, int button, int action, int mods)
     {
         Window* winProcess = (Window*)glfwGetWindowUserPointer(window);
@@ -208,7 +215,7 @@ public:
             Config::LoadGLEWLibrary();
             if (Config::GetGLEWStatus() == false)
             {
-                
+                exit(EXIT_FAILURE);
             }
         }
     }
@@ -223,7 +230,7 @@ public:
         glfwSetWindowPos(this->m_pWindow, iLeft, iRight);
     }
 
-    void SetDrawFunc(void (*DrawFunc) (Window* ))
+    void SetDrawFunc(void (*DrawFunc) (Window* , float deltime ))
     {
         this->DrawFunc = DrawFunc;
     }
@@ -372,9 +379,10 @@ public:
         return btnClicked;
     }
 
-    void Draw()
+    void Draw(float deltime)
     {
-        this->DrawFunc(this);
+        keyboard->DisableKeyInput();
+        this->DrawFunc(this , deltime);
         this->SwapBuffers();
         glfwPollEvents();
     }
@@ -401,6 +409,16 @@ public:
     void Focus()
     {
         glfwFocusWindow(m_pWindow);
+    }
+
+    void setKeyboard(MKeyboard* keyboard)
+    {
+        this->keyboard = keyboard;
+    }
+
+    MKeyboard* getKeyboard()
+    {
+        return this->keyboard;
     }
 };
 

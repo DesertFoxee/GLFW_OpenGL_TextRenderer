@@ -1,8 +1,9 @@
-#include "Utils.h"
+﻿#include "Utils.h"
 #include "Camera.h"
 #include "config.h"
 #include "Shader.h"
 #include "Window.h"
+#include "Keyboard.h"
 
 
 #define nvbos 2
@@ -26,6 +27,8 @@ GLuint vbo[nvbos];
 // object 
 glm::vec3 cube_pos;
 glm::vec3 pyramid_pos;
+
+MKeyboard keyboard;
 
 
 // transport matrix 
@@ -68,8 +71,8 @@ void setupCube()
 		 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, // right face
 		 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, // back face
 		 -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, // left face
-		 -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, // base �Eleft front
-		 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f // base �Eright back
+		 -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, // base ・left front
+		 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f // base ・right back
 	};
 
 	glGenBuffers(nvbos, vbo);
@@ -97,7 +100,7 @@ void Setup(Window * window)
 
 /* ======================= Loop Function ======================== */
 
-void display(Window * window )
+void display(Window * window , float deltime )
 {
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.0f, 0.1f, 0.1f, 0.0f);
@@ -129,21 +132,26 @@ void update()
 }
 void process(Window * window)
 {
-	if (glfwGetKey(window->getGLFW(), GLFW_KEY_A) == GLFW_PRESS)
+	//if (glfwGetKey(window->getGLFW(), GLFW_KEY_A) == GLFW_PRESS)
+	//{
+	//	Camera::moveLeft(5.f * delta_time);
+	//}
+	//if (glfwGetKey(window->getGLFW(), GLFW_KEY_S) == GLFW_PRESS)
+	//{
+	//	Camera::moveDown(5.f * delta_time);
+	//}
+	//if (glfwGetKey(window->getGLFW(), GLFW_KEY_D) == GLFW_PRESS)
+	//{
+	//	Camera::moveRight(5.f * delta_time);
+	//}
+	//if (glfwGetKey(window->getGLFW(), GLFW_KEY_W) == GLFW_PRESS)
+	//{
+	//	Camera::moveUp(5.f * delta_time);
+	//}
+
+	if (keyboard.PressedComplexKey(GLFW_KEY_LEFT_CONTROL, GLFW_KEY_LEFT_SHIFT, GLFW_KEY_A))
 	{
-		Camera::moveLeft(5.f * delta_time);
-	}
-	if (glfwGetKey(window->getGLFW(), GLFW_KEY_S) == GLFW_PRESS)
-	{
-		Camera::moveDown(5.f * delta_time);
-	}
-	if (glfwGetKey(window->getGLFW(), GLFW_KEY_D) == GLFW_PRESS)
-	{
-		Camera::moveRight(5.f * delta_time);
-	}
-	if (glfwGetKey(window->getGLFW(), GLFW_KEY_W) == GLFW_PRESS)
-	{
-		Camera::moveUp(5.f * delta_time);
+		cout << "PRess" << endl;
 	}
 }
 
@@ -155,16 +163,39 @@ void funcResize(Window* window, int widht, int height)
 	proj_mat = Utils::getMatrixProj(window, angle_view, _near, _far);
 }
 
-void funcKeyboard(Window* window , int key, int scancode, int action, int mods)
+void funcKeyboard(Window* window, int key, int scancode, int action, int mods)
 {
+	window->getKeyboard()->EnableKeyInput();
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 	{
 		window->setClose();
 	}
+
+	if (action == GLFW_PRESS)
+	{
+		keyboard.setKeyRealtime(key, GLFW_PRESS);
+	}
+	else if (action == GLFW_RELEASE)
+	{
+		keyboard.setKeyRealtime(key, GLFW_RELEASE);
+	}
+
+	//if (key == GLFW_KEY_A && action != GLFW_RELEASE)
+	//{
+	//	cout << "A Pressed" << endl;
+	//}
+
+	//if (key == GLFW_KEY_D && action != GLFW_RELEASE)
+	//{
+	//	cout << "D Pressed" << endl;
+	//}
 }
 void funcMouse(Window* window, int button, int action, int mods)
 {
-
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+	{
+		//window->ShowMessage(L"Thông báo", L"Button left clicked" , WindowDialogState::ERR);
+	}
 }
 
 void funcCurrsorPos(Window* window,double xpos, double ypos)
@@ -184,9 +215,7 @@ void funcCurrsorPos(Window* window,double xpos, double ypos)
 	Camera::rotate(xoffset, yoffset);
 	glfwSetCursorPos(window, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);*/
 }
-void funcCu(GLFWwindow* window, double xpos, double ypos)
-{
-}
+
 
 
 
@@ -198,24 +227,29 @@ int main()
 	setting.m_bResizeable = false;
 
 	Window window("OpenGL", SCREEN_WIDTH, SCREEN_HEIGHT, setting);
+
 	window.SetActiveContext();
 	window.SetDrawFunc(display);
 	window.SetKeyboardFunc(funcKeyboard);
 	window.SetMouseFunc(funcMouse);
 	window.SetScrollFunc(funcCurrsorPos);
 	window.SetResizeFunc(funcResize);
+
+	window.setKeyboard(&keyboard);
 	
 
 	Setup(&window);
 	while (!window.IsClosed())
 	{
-		float current_time = glfwGetTime();
+		float current_time =(float) glfwGetTime();
 		delta_time = current_time - last_frame;
 		last_frame = current_time;
 		process(&window);
 		update();
-		window.Draw();
+		window.Draw(delta_time);
 	}
 	Config::UnLoadLibraries();
+	getchar();
+
 	return EXIT_SUCCESS;
 }
