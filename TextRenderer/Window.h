@@ -59,7 +59,7 @@ struct WindowSetting
         m_bAnisotropic = false;
     }
     WindowSetting(char* title, unsigned int width, unsigned int height, int antiaLevel = -1,
-                  bool showCursor = true, bool resizeAble = true, bool uAnisotro = false)
+        bool showCursor = true, bool resizeAble = true, bool uAnisotro = false)
     {
         m_iAntiaLevel = antiaLevel;
         m_bShowCursor = showCursor;
@@ -90,7 +90,7 @@ private:
     GLFWwindow* m_pWindow;
 
 private:
-    void (*DrawFunc)       (Window* ,float deltime) = NULL;
+    void (*DrawFunc)       (Window*, float deltime) = NULL;
     void (*KeyboardFunc)   (Window*, int key, int scancode, int action, int mods);
     void (*MouseFunc)      (Window*, int button, int action, int mods);
     void (*ScrollFunc)     (Window*, double xoffset, double yoffset);
@@ -99,7 +99,7 @@ private:
 
 
 private:
-    MKeyboard* keyboard =NULL;
+    MKeyboard* m_pKeyboard = NULL;
 
 private:
 
@@ -125,12 +125,12 @@ private:
     static void DrawDef(GLFWwindow* window)
     {
         Window* winProcess = (Window*)glfwGetWindowUserPointer(window);
-        winProcess->DrawFunc(winProcess , 0.0f);
+        winProcess->DrawFunc(winProcess, 0.0f);
     }
     static void KeyboardFuncDef(GLFWwindow* window, int key, int scancode, int action, int mods)
     {
         Window* winProcess = (Window*)glfwGetWindowUserPointer(window);
-        //winProcess->getKeyboard()->EnableKeyInput();
+        winProcess->getKeyboard()->EnableKeyInput();
         winProcess->KeyboardFunc(winProcess, key, scancode, action, mods);
     }
 
@@ -230,7 +230,7 @@ public:
         glfwSetWindowPos(this->m_pWindow, iLeft, iRight);
     }
 
-    void SetDrawFunc(void (*DrawFunc) (Window* , float deltime ))
+    void SetDrawFunc(void (*DrawFunc) (Window*, float deltime))
     {
         this->DrawFunc = DrawFunc;
     }
@@ -242,7 +242,7 @@ public:
     void SetKeyboardFunc(void (*KeyboardFunc)(Window* window, int key, int scancode, int action, int mods))
     {
         this->KeyboardFunc = KeyboardFunc;
-        glfwSetKeyCallback(m_pWindow , KeyboardFuncDef );
+        glfwSetKeyCallback(m_pWindow, KeyboardFuncDef);
     }
     void SetMouseFunc(void (*MouseFunc)      (Window* window, int button, int action, int mods))
     {
@@ -330,7 +330,7 @@ public:
 
     WindowButton ShowMessage(const wchar_t* title, const wchar_t* msg, WindowDialogState state)
     {
-       
+
         int result = -1;
         switch (state)
         {
@@ -356,33 +356,33 @@ public:
         switch (result)
         {
             case IDTRYAGAIN:
-                btnClicked= WindowButton::TRYAGAIN;
+                btnClicked = WindowButton::TRYAGAIN;
                 break;
             case IDRETRY:
-                btnClicked =WindowButton::RETRY;
+                btnClicked = WindowButton::RETRY;
                 break;
             case IDCONTINUE:
-                btnClicked= WindowButton::CONTINUE;
+                btnClicked = WindowButton::CONTINUE;
                 break;
             case IDOK:
-                btnClicked= WindowButton::OK;
+                btnClicked = WindowButton::OK;
                 break;
             case IDYES:
-                btnClicked= WindowButton::YES;
+                btnClicked = WindowButton::YES;
                 break;
             case IDNO:
-                btnClicked= WindowButton::NO;
+                btnClicked = WindowButton::NO;
                 break;
             default:
-                btnClicked= WindowButton::CANCLE;
+                btnClicked = WindowButton::CANCLE;
         }
         return btnClicked;
     }
 
     void Draw(float deltime)
     {
-        keyboard->DisableKeyInput();
-        this->DrawFunc(this , deltime);
+        m_pKeyboard->DisableKeyInput();
+        this->DrawFunc(this, deltime);
         this->SwapBuffers();
         glfwPollEvents();
     }
@@ -413,12 +413,12 @@ public:
 
     void setKeyboard(MKeyboard* keyboard)
     {
-        this->keyboard = keyboard;
+        this->m_pKeyboard = keyboard;
     }
 
     MKeyboard* getKeyboard()
     {
-        return this->keyboard;
+        return this->m_pKeyboard;
     }
 };
 

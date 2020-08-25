@@ -26,6 +26,7 @@ using namespace std;
 
 class Config
 {
+
 private:
     static bool m_bGLFWStatus;
     static bool m_bGLEWStatus;
