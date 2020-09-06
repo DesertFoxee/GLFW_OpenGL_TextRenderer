@@ -27,7 +27,6 @@ class MKeyboard
     vector<int>             m_viStackKeyPrin;           // Lưu trữ phím có thể in được ấn
     vector<int>             m_viStackKeyFunc;           // Lưu trữ phím chức năng được ấn 
     vector<int>             m_viStackKeyShor;           // Lưu trữ phím có thể in được ấn phục vụ cho ShortCut
-    vector<vector<int>*>    m_viShortcutsContain;       // Chứa danh sách phím tắt phù hợp với tổ hợp phím được ấn
 
     vector<int>             m_viKeyComplex;             // Giá trị tạm thời lấy tham số chuyền vào của hàm 
 private:
@@ -60,7 +59,7 @@ public:
         //?????????????????????????
     }
 
-    bool CheckInShortcutKey(const char* shortKeyName)
+    bool NameInKeyShortcut(const char* shortKeyName)
     {
     #ifdef DEFINE_DEFAULT
         return Define::KeyShortcutNames[shortKeyName] ? true : false;
@@ -74,8 +73,14 @@ public:
         return Define::KeyShortcutNames[shortKeyName];
     }
 
-
-    bool IsChildrenShortcut(vector<int>& srcShortkey , vector<int>& shortkey)
+    /***********************************************************************
+     * Kiểm tra tổ hợp phím ấn có thuộc trong 1 phím tắt khác không
+     * Return :
+     *         TRUE  : Thuộc 
+     *         FALSE : Không thuọc
+     * Author: DesertFox    -Date ::06/09/2020
+     **********************************************************************/
+    bool IsChildrenShortcut(vector<int>& srcShortkey, vector<int>& shortkey)
     {
         if (shortkey.empty() || srcShortkey.empty())
         {
@@ -92,46 +97,17 @@ public:
         return true;
     }
 
-    bool IsKeyInShortcut(vector<int> *shortcut , int key, int index)
+    bool CheckKeyInShortCut(vector<int>& shortkey)
     {
-        if (index >= shortcut->size())
-            return false;
-
-        return  (*shortcut)[index] == key;
-    }
-
-
-    
-    void SetShortcutKeys(int key , int index)
-    {
-        if (m_viShortcutsContain.empty())
+        for (auto itshortkey : Define::KeyShortcutNames)
         {
-            for (auto itShortcut : Define::KeyShortcutNames)
+            if (IsChildrenShortcut(*itshortkey.second, shortkey) == true)
             {
-                auto ptrShortcut = itShortcut.second;
-                if (!ptrShortcut->empty() &&  && (*ptrShortcut)[index] == key)
-                {
-                    m_viShortcutsContain.push_back(ptrShortcut);
-                }
+                return true;
             }
         }
-        else
-        {
-            for (auto itShortcut = m_viShortcutsContain.begin(); itShortcut != m_viShortcutsContain.end();)
-            {
-                if (IsKeyInShortcut(*itShortcut, key, index) == false)
-                {
-                    itShortcut = m_viShortcutsContain.erase(itShortcut);
-                }
-                else
-                {
-                    itShortcut++;
-                }
-            }
-
-        }
+        return false;
     }
-
 
     bool IsKeyFunc(int keycode)
     {
@@ -158,7 +134,10 @@ public:
     {
         return (keycode >= 32) && (keycode <= 162);
     }
-
+    /***********************************************************************
+     * Xóa trạng thái phím khi một phím được nhả (released)
+     * Author: DesertFox    -Date ::06/09/2020
+     **********************************************************************/
     void RemoveKeyInStack(int keycode)
     {
         // Remove keycode in stack key normal 
@@ -186,6 +165,41 @@ public:
         {
             m_viStackKeyShor.clear();
             m_bIsPressedShortKey = false;
+        }
+    }
+
+    /***********************************************************************
+     * Thiết lập trạng thái phím khi được ấn (pressed)
+     * Author: DesertFox    -Date ::06/09/2020
+     **********************************************************************/
+    void AddKeyInStack(int keycode)
+    {
+        if (IsKeyFunc(keycode) && CheckInStackFunc(keycode) == -1)
+        {
+            m_viStackKeyFunc.push_back(keycode);
+        }
+
+        else if (IsKeyPrin(keycode))
+        {
+            m_viStackKeyShor.push_back(keycode);
+
+            vector<int> shortkey;
+            shortkey.insert(shortkey.end(), m_viStackKeyFunc.begin(), m_viStackKeyFunc.end());
+            shortkey.insert(shortkey.end(), m_viStackKeyShor.begin(), m_viStackKeyShor.end());
+
+            if (m_viStackKeyFunc.size() <= 0 || !CheckKeyInShortCut(shortkey))
+            {
+                m_viStackKeyShor.clear();
+            }
+
+            if (CheckInStackPrin(keycode) == -1)
+            {
+                m_viStackKeyPrin.push_back(keycode);
+            }
+        }
+        else
+        {
+            // Các phím không được xử lý 
         }
     }
 
@@ -259,29 +273,7 @@ public:
         }
         else if (state == GLFW_PRESS)
         {
-            if (IsKeyFunc(keycode) && CheckInStackFunc(keycode) == -1)
-            {
-                SetShortcutKeys(keycode , m_viStackKeyFunc.size());
-                m_viStackKeyFunc.push_back(keycode);
-            }
-
-            else if (IsKeyPrin(keycode))
-            {
-                SetShortcutKeys(keycode, m_viStackKeyFunc.size() + m_viStackKeyShor.size());
-                if (m_viStackKeyFunc.size() > 0 && m_viShortcutsContain.empty() &&
-                    m_viStackKeyFunc.size() + m_viStackKeyShor.size() < MAX_KEY_SHORTCUT )
-                {
-                    m_viStackKeyShor.push_back(keycode);
-                }
-                if (CheckInStackPrin(keycode) == -1)
-                {
-                    m_viStackKeyPrin.push_back(keycode);
-                }
-            }
-            else
-            {
-                // Các phím không được xử lý 
-            }
+            AddKeyInStack(keycode);
         }
     }
 
@@ -294,13 +286,13 @@ public:
     {
         m_bIsPollEventKey = false;
     }
-    bool getInputState()
+    bool GetKeyInputState()
     {
         return m_bIsPollEventKey;
     }
     //========================
 
-    void setKeyRealtime(int keycode, bool state)
+    void SetKey(int keycode, bool state)
     {
         m_arbKey[keycode] = state;
         PushStackKey(keycode, state);
@@ -310,60 +302,26 @@ public:
         }
     }
 
-    bool getKeyRealtime(int keycode)
+    bool GetKey(int keycode)
     {
         return  m_arbKey[keycode];
     }
+
     bool PressedKey(int keycode)
     {
         return m_arbKey[keycode] && m_bIsPollEventKey && (m_iLastKey == keycode);
     }
 
-
-
-    template<typename... Args>
-    bool PressedShorcutKey(int key, Args...args)
+    bool PressedShorcutKey(const char* nameShortkey)
     {
-        m_viKeyComplex.clear();
-        this->getArguments(key, args...);
+        if (!NameInKeyShortcut(nameShortkey)) return false;
 
-        if (m_iLastKey == m_viKeyComplex.back() && m_bIsPollEventKey)
-        {
-            int oldIndex = -1;
-            for (auto keyCheck : m_viKeyComplex)
-            {
-                int indexKeyFunc = CheckInStackFunc(keyCheck);
-                int indexKeyShor = CheckInStackShor(keyCheck);
-                if (indexKeyFunc == -1 && indexKeyShor == -1)
-                {
-                    return false;
-                }
-                else
-                {
-                    int newIndex = (indexKeyFunc != -1) ? indexKeyFunc : (indexKeyShor + m_viStackKeyFunc.size());
-                    if (newIndex == oldIndex + 1)
-                    {
-                        oldIndex = newIndex;
-                    }
-                    else return false;
-                }
-            }
-            m_bIsPressedShortKey = true;
-            return true;
-        }
-        return false;
-    }
-
-    bool PressedShorcutKey(const char* shortKeyName)
-    {
-        if (!CheckInShortcutKey(shortKeyName)) return false;
-
-        vector<int>* shortKey = GetShortcutKey(shortKeyName);
+        vector<int>* shortKey = GetShortcutKey(nameShortkey);
 
         if (m_iLastKey == (*shortKey).back() && m_bIsPollEventKey)
         {
             int oldIndex = -1;
-            for (auto keyCheck : m_viKeyComplex)
+            for (auto keyCheck : *shortKey)
             {
                 int indexKeyFunc = CheckInStackFunc(keyCheck);
                 int indexKeyShor = CheckInStackShor(keyCheck);

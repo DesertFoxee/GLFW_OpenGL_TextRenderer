@@ -13,6 +13,7 @@
 #include <vector>
 #include "Config.h"
 #include "Keyboard.h"
+#include "Mouse.h"
 
 
 
@@ -90,7 +91,9 @@ private:
     GLFWwindow* m_pWindow;
 
 private:
-    void (*DrawFunc)       (Window*, float deltime) = NULL;
+    void (*DrawFunc)       (Window*, float deltime)         = NULL;
+    void (*UpdateFunc)     (Window*)                        = NULL;
+    void (*ProcessFunc)    (Window* , float deltime)        = NULL;
     void (*KeyboardFunc)   (Window*, int key, int scancode, int action, int mods);
     void (*MouseFunc)      (Window*, int button, int action, int mods);
     void (*ScrollFunc)     (Window*, double xoffset, double yoffset);
@@ -100,9 +103,15 @@ private:
 
 private:
     MKeyboard* m_pKeyboard = NULL;
+    MMouse* m_pMouse = NULL;
 
 private:
+    void SetupFunctionCallback()
+    {
+        glfwSetKeyCallback(m_pWindow, KeyboardFuncDef);
+        glfwSetMouseButtonCallback(m_pWindow, MouseFuncDef);
 
+    }
     void SetupHintsBefore()
     {
         if (m_wsSetting.m_bResizeable == true)
@@ -131,13 +140,27 @@ private:
     {
         Window* winProcess = (Window*)glfwGetWindowUserPointer(window);
         winProcess->getKeyboard()->EnableKeyInput();
-        winProcess->KeyboardFunc(winProcess, key, scancode, action, mods);
+        if (action == GLFW_PRESS)
+        {
+            winProcess->m_pKeyboard->SetKey(key, GLFW_PRESS);
+        }
+        else if (action == GLFW_RELEASE)
+        {
+            winProcess->m_pKeyboard->SetKey(key, GLFW_RELEASE);
+        }
     }
 
     static void MouseFuncDef(GLFWwindow* window, int button, int action, int mods)
     {
         Window* winProcess = (Window*)glfwGetWindowUserPointer(window);
-        winProcess->MouseFunc(winProcess, button, action, mods);
+        if (action == GLFW_PRESS)
+        {
+            winProcess->m_pMouse->SetButton(button, GLFW_PRESS);
+        }
+        else if (action == GLFW_RELEASE)
+        {
+            winProcess->m_pMouse->SetButton(button, GLFW_RELEASE);
+        }
     }
     static void ResizeFuncDef(GLFWwindow* window, int xpos, int ypos)
     {
@@ -176,6 +199,7 @@ public:
             glfwSetWindowUserPointer(m_pWindow, this);
             SetupHintsAfter();
         }
+        SetupFunctionCallback();
     }
 
     Window(const char* title, unsigned int width, unsigned int height, WindowSetting setting)
@@ -199,6 +223,7 @@ public:
             glfwSetWindowUserPointer(m_pWindow, this);
             SetupHintsAfter();
         }
+        SetupFunctionCallback();
     }
 
     ~Window()
@@ -233,6 +258,14 @@ public:
     void SetDrawFunc(void (*DrawFunc) (Window*, float deltime))
     {
         this->DrawFunc = DrawFunc;
+    }
+    void SetUpdateFunc(void (*UpdateFunc) (Window*))
+    {
+        this->UpdateFunc = UpdateFunc;
+    }
+    void SetProcessFunc(void (*ProcessFunc) (Window*, float deltime))
+    {
+        this->ProcessFunc = ProcessFunc;
     }
     void SetResizeFunc(void (*ResizeFunc) (Window* window, int width, int height))
     {
@@ -379,6 +412,16 @@ public:
         return btnClicked;
     }
 
+    void Process(float deltime)
+    {
+        this->ProcessFunc(this, deltime);
+    }
+
+    void Update()
+    {
+        this->UpdateFunc(this);
+    }
+
     void Draw(float deltime)
     {
         m_pKeyboard->DisableKeyInput();
@@ -386,6 +429,7 @@ public:
         this->SwapBuffers();
         glfwPollEvents();
     }
+
     void SwapBuffers()
     {
         glfwSwapBuffers(m_pWindow);
@@ -401,7 +445,7 @@ public:
         glfwSetWindowShouldClose(m_pWindow, true);
         glfwDestroyWindow(m_pWindow);
     }
-    void setClose(bool isClosed = true)
+    void SetClose(bool isClosed = true)
     {
         this->m_bClose = isClosed;
         glfwSetWindowShouldClose(m_pWindow, true);
@@ -411,10 +455,16 @@ public:
         glfwFocusWindow(m_pWindow);
     }
 
-    void setKeyboard(MKeyboard* keyboard)
+    void SetKeyboard(MKeyboard* keyboard)
     {
         this->m_pKeyboard = keyboard;
     }
+
+    void SetMouse(MMouse* mouse)
+    {
+        this->m_pMouse = mouse;
+    }
+
 
     MKeyboard* getKeyboard()
     {

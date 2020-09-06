@@ -29,6 +29,7 @@ glm::vec3 cube_pos;
 glm::vec3 pyramid_pos;
 
 MKeyboard keyboard;
+MMouse mouse;
 
 
 // transport matrix 
@@ -87,14 +88,6 @@ void setupCube()
 
 }
 
-void Setup(Window* window)
-{
-    cube_pos = glm::vec3(0.0f, 0.0f, 0.0f);
-    proj_mat = Utils::getMatrixProj(window, angle_view, _near, _far);
-    shader.LoadShader("Vertex.glsl", "Frag.glsl");
-    Camera::setUp(glm::vec3(0.0, 0.0, 8.0));
-    setupCube();
-}
 
 
 /* ======================= Loop Function ======================== */
@@ -125,12 +118,12 @@ void display(Window* window, float deltime)
     //shader.DontUse();
 }
 
-void update()
+void update(Window * window)
 {
 
 
 }
-void process(Window* window)
+void process(Window* window , float deltime)
 {
     //if (glfwGetKey(window->getGLFW(), GLFW_KEY_A) == GLFW_PRESS)
     //{
@@ -149,22 +142,16 @@ void process(Window* window)
     //	Camera::moveUp(5.f * delta_time);
     //}
 
-    if (keyboard.PressedShorcutKey(GLFW_KEY_LEFT_CONTROL, GLFW_KEY_K, GLFW_KEY_C))
+    if (keyboard.PressedShorcutKey("COMMENT"))
     {
         cout << "Pressed shortcut key Control + K + C" << endl;
     }
 
-    //cout << "Process" << endl;
+    if (keyboard.PressedKey(GLFW_KEY_ESCAPE))
+    {
+        window->SetClose();
+    }
 
-    //if (keyboard.PressedComplexKey(GLFW_KEY_LEFT_CONTROL, GLFW_KEY_K, GLFW_KEY_C))
-    //{
-    //	cout << "Pressed Control + K + C" << endl;
-    //}
-
-    //if (keyboard.PressedComplexKey(GLFW_KEY_LEFT_CONTROL, GLFW_KEY_LEFT_SHIFT, GLFW_KEY_A))
-    //{
-    //	cout << "PRess" << endl;
-    //}
 }
 
 /* ======================= Event Function ======================= */
@@ -175,40 +162,6 @@ void funcResize(Window* window, int widht, int height)
     proj_mat = Utils::getMatrixProj(window, angle_view, _near, _far);
 }
 
-void funcKeyboard(Window* window, int key, int scancode, int action, int mods)
-{
-    //cout << "Keyboard" << endl;
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-    {
-        window->setClose();
-    }
-
-    if (action == GLFW_PRESS)
-    {
-        keyboard.setKeyRealtime(key, GLFW_PRESS);
-    }
-    else if (action == GLFW_RELEASE)
-    {
-        keyboard.setKeyRealtime(key, GLFW_RELEASE);
-    }
-
-    //if (key == GLFW_KEY_A && action != GLFW_RELEASE)
-    //{
-    //	cout << "A Pressed" << endl;
-    //}
-
-    //if (key == GLFW_KEY_D && action != GLFW_RELEASE)
-    //{
-    //	cout << "D Pressed" << endl;
-    //}
-}
-void funcMouse(Window* window, int button, int action, int mods)
-{
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-    {
-        //window->ShowMessage(L"Thông báo", L"Button left clicked" , WindowDialogState::ERR);
-    }
-}
 
 void funcCurrsorPos(Window* window, double xpos, double ypos)
 {
@@ -220,15 +173,20 @@ void funcCurrsorPos(Window* window, double xpos, double ypos)
     xoffset *= sensitivity;
     yoffset *= sensitivity;
 
-
-
     m_last_x = xpos;
     m_last_y = ypos;
     Camera::rotate(xoffset, yoffset);
     glfwSetCursorPos(window, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);*/
 }
 
-
+void Setup(Window* window)
+{
+    cube_pos = glm::vec3(0.0f, 0.0f, 0.0f);
+    proj_mat = Utils::getMatrixProj(window, angle_view, _near, _far);
+    shader.LoadShader("Vertex.glsl", "Frag.glsl");
+    Camera::setUp(glm::vec3(0.0, 0.0, 8.0));
+    setupCube();
+}
 
 
 int main()
@@ -241,23 +199,26 @@ int main()
     Window window("OpenGL", SCREEN_WIDTH, SCREEN_HEIGHT, setting);
 
     window.SetActiveContext();
+
     window.SetDrawFunc(display);
-    window.SetKeyboardFunc(funcKeyboard);
-    window.SetMouseFunc(funcMouse);
+    window.SetUpdateFunc(update);
+    window.SetProcessFunc(process);
     window.SetScrollFunc(funcCurrsorPos);
     window.SetResizeFunc(funcResize);
 
-    window.setKeyboard(&keyboard);
+    window.SetKeyboard(&keyboard);
+    window.SetMouse(&mouse);
 
 
     Setup(&window);
+    
     while (!window.IsClosed())
     {
         float current_time = (float)glfwGetTime();
         delta_time = current_time - last_frame;
         last_frame = current_time;
-        process(&window);
-        update();
+        window.Process(delta_time);
+        window.Update();
         window.Draw(delta_time);
     }
     Config::UnLoadLibraries();
