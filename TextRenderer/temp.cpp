@@ -186,4 +186,40 @@ int main()
     writer->write(root, &outputFileStream);
     getchar();
 }
+======================================================
+	typedef GenericDocument<UTF16<> > WDocument;
+	typedef GenericValue<UTF16<> > WValue;
+    //ifstream ifs("outputu8.json");
+    //IStreamWrapper  isw(ifs);
+    //typedef EncodedInputStream<UTF8<>, IStreamWrapper> InputStream;
+    //InputStream  eis(isw);
+    //Document d;
+    //d.ParseStream<0, UTF8<>>(eis);
 
+    //string a = d["vungmoi"].GetString();
+    ////int ia = d["time"].GetDouble();
+
+    ////Muốn hiển thị UNICODE hàm Covert to UTF16
+    ////wstring wa = conveUTF8toUTF16(a);
+
+    //if (a == u8"え ぉ お か が き ⾝ ⾜ ⿕⾝ ⾜ ⿕")
+    //{
+    //    ShowMSG(conveUTF8toUTF16(a));
+    //}
+    
+
+    ofstream ofs("outputu8.json");
+    OStreamWrapper osw(ofs);
+    typedef EncodedOutputStream<UTF8<>, OStreamWrapper> OutputStream;
+    OutputStream eos(osw, true);
+    CString  test = _T("え ぉ お");
+    WDocument d(kObjectType);
+    Document::AllocatorType& allocator = d.GetAllocator();
+
+    WValue newText(kStringType);
+    newText.SetString(test , allocator);
+
+    d.AddMember(L"vungmoi" , newText , allocator);
+
+    Writer<OutputStream, UTF16<>> writer(eos);
+    d.Accept(writer);
