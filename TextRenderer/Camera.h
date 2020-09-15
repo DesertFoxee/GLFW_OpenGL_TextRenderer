@@ -7,114 +7,129 @@
 #include <glm/gtx/string_cast.hpp>
 #include <iostream>
 #include "Config.h"
+#include "Utils.h"
+#include "Utils.h"
 
 using namespace std;
 
 class Camera
 {
 
-	/*
-		Position  : setup
-		Direction : normal(cameraPos - cameraTarget );
-		Right     : normal (cross (up , direction ));
-		Up        : normal (cross (direction , right));
-	*/
+    /*
+        Position  : setup
+        Direction : normal(cameraPos - cameraTarget );
+        Right     : normal (cross (up , direction ));
+        Up        : normal (cross (direction , right));
+    */
 
 private:
-	static glm::vec3 target;
-	static float pitch;
-	static float yaw;
+    static float pitch              ;
+    static float yaw                ;
 
-	static glm::vec3 up;
-	static glm::vec3 position;
+    static glm::mat4 mat4Proj       ;
 
-	static void calculateTarget()
-	{
-		float x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-		float y = sin(glm::radians(pitch));
-		float z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    static glm::vec3 target         ;
+    static glm::vec3 up             ;
+    static glm::vec3 position       ;
 
-		target = glm::normalize(glm::vec3(x, y, z));
-	}
+    static void calculateTarget()
+    {
+        float x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+        float y = sin(glm::radians(pitch));
+        float z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
+        target = glm::normalize(glm::vec3(x, y, z));
+    }
 public:
 
-	static void setPosition(glm::vec3 pos)
-	{
-		Camera::position = pos;
-	}
-	static void setAngle(float yaw, float pit)
-	{
-		Camera::pitch = pit;
-		Camera::yaw = yaw;
-		Camera::calculateTarget();
-	}
+    static void setPosition(glm::vec3 pos)
+    {
+        Camera::position = pos;
+    }
+    static void setAngle(float yaw, float pit)
+    {
+        Camera::pitch = pit;
+        Camera::yaw = yaw;
+        Camera::calculateTarget();
+    }
 
-	// move camera
-	static void moveUp(float delta_move)
-	{
-		Camera::position += Camera::target * delta_move;
-	}
+    // move camera
+    static void moveUp(float delta_move)
+    {
+        Camera::position += Camera::target * delta_move;
+    }
 
-	static void moveDown(float delta_move)
-	{
-		Camera::position -= Camera::target * delta_move;
-	}
-	static void moveRight(float delta_move)
-	{
+    static void moveDown(float delta_move)
+    {
+        Camera::position -= Camera::target * delta_move;
+    }
+    static void moveRight(float delta_move)
+    {
 
-		glm::vec3 vec_dir;
-		vec_dir = glm::cross(Camera::target, glm::vec3(0.0, 1.0, 0.0));
+        glm::vec3 vec_dir;
+        vec_dir = glm::cross(Camera::target, glm::vec3(0.0, 1.0, 0.0));
 
-		vec_dir = glm::normalize(vec_dir);
+        vec_dir = glm::normalize(vec_dir);
 
-		Camera::position += vec_dir * delta_move;
+        Camera::position += vec_dir * delta_move;
 
-	}
-	static void moveLeft(float delta_move)
-	{
-		glm::vec3 vec_dir;
-		vec_dir = glm::cross(Camera::target, glm::vec3(0.0, 1.0, 0.0));
+    }
+    static void moveLeft(float delta_move)
+    {
+        glm::vec3 vec_dir;
+        vec_dir = glm::cross(Camera::target, glm::vec3(0.0, 1.0, 0.0));
 
-		vec_dir = glm::normalize(vec_dir);
+        vec_dir = glm::normalize(vec_dir);
 
-		Camera::position -= vec_dir * delta_move;
-	}
+        Camera::position -= vec_dir * delta_move;
+    }
 
-	// rotate camera 
-	static void rotate(float delt_yaw, float delt_pitch)
-	{
-		Camera::pitch += delt_pitch;
-		Camera::yaw += delt_yaw;
+    // rotate camera 
+    static void rotate(float delt_yaw, float delt_pitch)
+    {
+        Camera::pitch += delt_pitch;
+        Camera::yaw += delt_yaw;
 
-		Camera::calculateTarget();
-	}
+        Camera::calculateTarget();
+    }
 
-	static void rotateHorizontal(float delt_angle)
-	{
-		Camera::yaw += delt_angle;
+    static void rotateHorizontal(float delt_angle)
+    {
+        Camera::yaw += delt_angle;
 
-		Camera::calculateTarget();
-	}
-	static void rotateVertical(float delt_angle)
-	{
-		Camera::pitch += delt_angle;
+        Camera::calculateTarget();
+    }
+    static void rotateVertical(float delt_angle)
+    {
+        Camera::pitch += delt_angle;
 
-		Camera::calculateTarget();
-	}
-	static void setUp(glm::vec3 pos, float pitch = 0.f, float yaw = -90.f, glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f))
-	{
-		Camera::position = pos;
-		Camera::pitch = pitch;
-		Camera::yaw = yaw;
-		Camera::up = up;
+        Camera::calculateTarget();
+    }
+    static void setUp(glm::vec3 pos, float pitch = 0.f, float yaw = -90.f, glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f))
+    {
+        Camera::position = pos;
+        Camera::pitch = pitch;
+        Camera::yaw = yaw;
+        Camera::up = up;
 
-		Camera::calculateTarget();
-	}
+        Camera::calculateTarget();
+    }
 
-	static glm::mat4 getView()
-	{
-		return glm::lookAt(position, position + target, up);
-	}
+    static glm::mat4 GetView()
+    {
+        return glm::lookAt(position, position + target, up);
+    }
+
+    static void SetProjMatrix(unsigned int width, unsigned int height, float degree, float _near, float _far)
+    {
+        float aspect_ratio = float(width) / float(height);
+        Camera::mat4Proj = glm::perspective(Utils::cvDegreeToRadius(degree), aspect_ratio, _near, _far);
+    }
+
+    static glm::mat4* GetProjMatrix()
+    {
+        return &Camera::mat4Proj;
+    }
 };
 
 #endif // !CAMERA_H

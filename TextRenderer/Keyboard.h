@@ -2,10 +2,13 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include "Define.h"
 #include <vector>
 #include <list>
 #include <iostream>
+#include <fstream>
+#include "Define.h"
+#include "Config.h"
+#include "Utils.h"
 
 #define MAX_KEYBOARD GLFW_KEY_LAST
 #define MAX_KEY_FRIN_SHORTCUT 2
@@ -54,9 +57,41 @@ public:
         }
     }
 
-    bool LoadShortkeyDefine()
+    /***********************************************************************
+    * Load cấu hình phím tắt từ  file
+    *         TRUE  : Nếu load thành công
+    *         FALSE : Không thành công
+    * Author: DesertFox    -Date ::15/09/2020
+    **********************************************************************/
+    bool LoadShortkeyDefine(string path)
     {
-        //?????????????????????????
+        ASSERT(path != "");
+        if (path == "") return false;
+        ifstream file(path);
+        if (file.is_open())
+        {
+            string line;
+            while (!file.eof())
+            {
+                getline(file, line);
+                Utils::RemoveExtraSpace(line);
+                vector<string> keynames = Utils::Split(line, " ");
+                const char* key = keynames.size() >= 2 ? keynames[0].c_str() : "";
+
+                if (key != "")
+                {
+                    keynames.erase(keynames.begin());
+                    Define::PushToKeyShortcut(key, keynames);
+                }
+            }
+            file.close();
+        }
+        else
+        {
+            std::cout << "[Error] << Load file shortkey failed !" << endl;
+            return false;
+        }
+        return true;
     }
 
     bool NameInKeyShortcut(const char* shortKeyName)
@@ -76,17 +111,20 @@ public:
     /***********************************************************************
      * Kiểm tra tổ hợp phím ấn có thuộc trong 1 phím tắt khác không
      * Return :
-     *         TRUE  : Thuộc 
-     *         FALSE : Không thuọc
+     *         TRUE  : Thuộc
+     *         FALSE : Không thuộc
      * Author: DesertFox    -Date ::06/09/2020
      **********************************************************************/
-    bool IsChildrenShortcut(vector<int>& srcShortkey, vector<int>& shortkey)
+    bool IsChildrenShortcut(vector<int>* srcShortkey, vector<int>* shortkey)
     {
-        if (shortkey.empty() || srcShortkey.empty())
+        ASSERT(srcShortkey && shortkey);
+        if (srcShortkey == NULL || shortkey == NULL) return false;
+
+        if (shortkey->empty() || srcShortkey->empty())
         {
             return false;
         }
-        size_t minSize = srcShortkey.size() <= shortkey.size() ? srcShortkey.size() : shortkey.size();
+        size_t minSize = srcShortkey->size() <= shortkey->size() ? srcShortkey->size() : shortkey->size();
 
         for (auto i = 0; i < minSize; i++)
         {
@@ -97,11 +135,11 @@ public:
         return true;
     }
 
-    bool CheckKeyInShortCut(vector<int>& shortkey)
+    bool CheckKeyInShortCut(vector<int>* shortkey)
     {
         for (auto itshortkey : Define::KeyShortcutNames)
         {
-            if (IsChildrenShortcut(*itshortkey.second, shortkey) == true)
+            if (IsChildrenShortcut(itshortkey.second, shortkey) == true)
             {
                 return true;
             }
@@ -187,7 +225,7 @@ public:
             shortkey.insert(shortkey.end(), m_viStackKeyFunc.begin(), m_viStackKeyFunc.end());
             shortkey.insert(shortkey.end(), m_viStackKeyShor.begin(), m_viStackKeyShor.end());
 
-            if (m_viStackKeyFunc.size() <= 0 || !CheckKeyInShortCut(shortkey))
+            if (m_viStackKeyFunc.size() <= 0 || !CheckKeyInShortCut(&shortkey))
             {
                 m_viStackKeyShor.clear();
             }

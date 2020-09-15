@@ -91,5 +91,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="SourceWords.txt" />
+    <Text Include="confkeyboard.ini" />
   </ItemGroup>
 </Project>

@@ -33,7 +33,7 @@ MMouse mouse;
 
 
 // transport matrix 
-glm::mat4 proj_mat, view_mat, model_mat;
+glm::mat4 view_mat, model_mat;
 glm::mat4 r_mat;
 
 // Shader;
@@ -102,8 +102,8 @@ void display(Window* window, float deltime)
 
     // get value glsl 
     model_mat = glm::translate(glm::mat4(1.0f), cube_pos);
-    view_mat = Camera::getView();
-    shader.LoadMatrix(model_mat, view_mat, proj_mat);
+    view_mat = Camera::GetView();
+    shader.LoadMatrix(model_mat, view_mat, *Camera::GetProjMatrix());
 
     // Draw Cube 
     // associate VBO with the corresponding vertex attribute in the vertex shader
@@ -125,23 +125,7 @@ void update(Window * window)
 }
 void process(Window* window , float deltime)
 {
-    //if (glfwGetKey(window->getGLFW(), GLFW_KEY_A) == GLFW_PRESS)
-    //{
-    //	Camera::moveLeft(5.f * delta_time);
-    //}
-    //if (glfwGetKey(window->getGLFW(), GLFW_KEY_S) == GLFW_PRESS)
-    //{
-    //	Camera::moveDown(5.f * delta_time);
-    //}
-    //if (glfwGetKey(window->getGLFW(), GLFW_KEY_D) == GLFW_PRESS)
-    //{
-    //	Camera::moveRight(5.f * delta_time);
-    //}
-    //if (glfwGetKey(window->getGLFW(), GLFW_KEY_W) == GLFW_PRESS)
-    //{
-    //	Camera::moveUp(5.f * delta_time);
-    //}
-
+   
     if (keyboard.PressedShorcutKey("COMMENT"))
     {
         cout << "Pressed shortcut key Control + K + C" << endl;
@@ -159,7 +143,7 @@ void process(Window* window , float deltime)
 void funcResize(Window* window, int widht, int height)
 {
     glViewport(0, 0, widht, height);
-    proj_mat = Utils::getMatrixProj(window, angle_view, _near, _far);
+    Camera::SetProjMatrix(window->getWidth() , window->getHeight(), angle_view, _near, _far);
 }
 
 
@@ -182,9 +166,10 @@ void funcCurrsorPos(Window* window, double xpos, double ypos)
 void Setup(Window* window)
 {
     cube_pos = glm::vec3(0.0f, 0.0f, 0.0f);
-    proj_mat = Utils::getMatrixProj(window, angle_view, _near, _far);
     shader.LoadShader("Vertex.glsl", "Frag.glsl");
     Camera::setUp(glm::vec3(0.0, 0.0, 8.0));
+    Camera::SetProjMatrix(window->getWidth(), window->getHeight(), angle_view, _near, _far);
+    keyboard.LoadShortkeyDefine("confkeyboard.ini");
     setupCube();
 }
 
