@@ -1,4 +1,7 @@
 #pragma once
+
+
+#define A a
 class MMouse
 {
 
